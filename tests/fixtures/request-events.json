@@ -1,0 +1,12 @@
+{
+  "requestWillBeSent": {
+    "requestId": "request-1",
+    "timestamp": 123.45,
+    "type": "Fetch",
+    "request": {
+      "url": "https://api.example.com/v1/accounts?active=true",
+      "method": "GET",
+      "headers": { "Accept": "application/json" }
+    }
+  }
+}

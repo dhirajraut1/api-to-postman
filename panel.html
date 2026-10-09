@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>API to Postman</title></head>
+<body>
+  <main id="app">
+    <header><div><h1>API to Postman</h1><p id="status" role="status">Not recording</p></div><span class="privacy">Sensitive values are redacted on export</span></header>
+    <section class="toolbar" aria-label="Capture controls">
+      <button id="start">Start capture</button><button id="stop">Stop capture</button><button id="clear">Clear</button>
+    </section>
+    <section class="filters" aria-label="Request filters">
+      <input id="search" placeholder="Search URL, method, host…" aria-label="Search requests">
+      <select id="method-filter" aria-label="Filter by method"><option value="">All methods</option><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>OPTIONS</option><option>HEAD</option></select>
+      <select id="status-filter" aria-label="Filter by response status"><option value="">All statuses</option><option value="2">2xx success</option><option value="3">3xx redirect</option><option value="4">4xx client error</option><option value="5">5xx server error</option><option value="none">No response</option></select>
+    </section>
+    <section class="selection-toolbar"><label><input id="select-visible" type="checkbox"> Select visible</label><span id="count">0 requests</span><button id="export-all">Export all</button></section>
+    <div class="workspace">
+      <section><h2>Captured requests</h2><div id="requests" role="list" aria-label="Captured requests"></div></section>
+      <section class="inspect"><h2>Request inspector</h2><div class="detail-actions"><button id="copy-curl" disabled>Copy cURL</button><button id="copy-json" disabled>Copy details</button></div><pre id="details">Select a request to inspect request and response details.</pre></section>
+    </div>
+    <section class="publish">
+      <h2>Export to Postman</h2>
+      <div class="publish-fields"><label>Postman API key<input id="api-key" type="password" autocomplete="off" placeholder="PMAK-…"></label><label>Workspace ID<input id="workspace-id" autocomplete="off" placeholder="Workspace ID"></label><label>Collection name<input id="collection-name" value="Captured API Requests"></label></div>
+      <div class="toolbar"><button id="download">Download selected collection</button><button id="publish">Create collection in Postman</button><button id="save-settings">Save settings</button></div>
+      <p class="hint">The API key is stored in this browser's extension storage only if you choose Save settings. Prefer downloading the collection if you do not want to store a key.</p>
+    </section>
+  </main>
+  <script type="module" src="/src/panel/main.ts"></script>
+</body></html>

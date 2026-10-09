@@ -1,0 +1,11 @@
+{
+  "responseReceived": {
+    "requestId": "request-1",
+    "response": {
+      "status": 200,
+      "statusText": "OK",
+      "mimeType": "application/json",
+      "headers": { "Content-Type": "application/json" }
+    }
+  }
+}
