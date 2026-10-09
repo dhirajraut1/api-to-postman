@@ -37,7 +37,9 @@ export default defineConfig({
       input: {
         "background/service-worker": resolve(root, "src/background/service-worker.ts"),
         devtools: resolve(root, "devtools.html"),
-        panel: resolve(root, "panel.html")
+        panel: resolve(root, "panel.html"),
+        index: resolve(root, "index.html"),
+        privacy: resolve(root, "privacy-policy.html")
       },
       output: {
         entryFileNames: "[name].js",

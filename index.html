@@ -1,0 +1,1979 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API to Postman | Chrome DevTools Network to Postman Collection Exporter</title>
+  <meta name="description" content="Capture browser network traffic directly from Chrome DevTools and export clean Postman Collections (v2.1) with automated credential redaction and workspace synchronization.">
+  <meta name="keywords" content="Chrome Extension, DevTools, Postman, Postman Collection v2.1, Network Capture, cURL, API Testing, Security Redaction">
+  <meta property="og:title" content="API to Postman - Chrome DevTools Extension">
+  <meta property="og:description" content="Turn browser network traffic into clean Postman Collection v2.1 JSON with automated credential redaction and direct workspace publishing.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="public/icons/icon.svg">
+  <link rel="icon" type="image/svg+xml" href="public/icons/icon.svg">
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-primary: #070a12;
+      --bg-secondary: #0d121f;
+      --bg-tertiary: #131b2e;
+      --bg-card: rgba(19, 27, 46, 0.65);
+      --bg-card-hover: rgba(25, 36, 61, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(255, 108, 55, 0.35);
+      --border-cyan: rgba(0, 242, 254, 0.3);
+      
+      --brand-orange: #ff6c37;
+      --brand-orange-hover: #ff521d;
+      --brand-orange-light: #ff8a5c;
+      --brand-gradient: linear-gradient(135deg, #ff7b39 0%, #ff451a 100%);
+      
+      --accent-cyan: #00f2fe;
+      --accent-blue: #4facfe;
+      --accent-green: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-yellow: #f59e0b;
+      --accent-red: #ef4444;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 22px;
+      --radius-xl: 32px;
+
+      --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.4);
+      --shadow-glow: 0 0 35px rgba(255, 108, 55, 0.22);
+      --shadow-cyan: 0 0 30px rgba(0, 242, 254, 0.15);
+
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Background Glows */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(255, 108, 55, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 90% 15%, rgba(0, 242, 254, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 50% 60%, rgba(139, 92, 246, 0.05) 0%, transparent 55%),
+        radial-gradient(circle at 80% 85%, rgba(255, 108, 55, 0.05) 0%, transparent 40%);
+    }
+
+    /* Navigation */
+    header.navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: rgba(7, 10, 18, 0.82);
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 1.75rem;
+      transition: var(--transition);
+    }
+
+    .nav-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      box-shadow: 0 2px 10px rgba(255, 108, 55, 0.3);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.75rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .nav-links a:hover {
+      color: #ffffff;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      padding: 0.65rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--brand-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 18px rgba(255, 108, 55, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(255, 108, 55, 0.5);
+      background: linear-gradient(135deg, #ff8548 0%, #ff521d 100%);
+    }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+    }
+
+    .btn-ghost:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-sm {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      border-radius: 6px;
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 3.5rem auto 5rem;
+      padding: 0 1.5rem;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.95rem;
+      border-radius: 9999px;
+      background: rgba(255, 108, 55, 0.1);
+      border: 1px solid rgba(255, 108, 55, 0.3);
+      color: var(--brand-orange-light);
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 12px rgba(255, 108, 55, 0.15);
+    }
+
+    .hero-badge .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--brand-orange);
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    .hero-title {
+      font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.25rem;
+      max-width: 980px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-title span.gradient-text {
+      background: linear-gradient(135deg, #ffffff 15%, #ff8a5c 60%, #ff451a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1.05rem, 2vw, 1.25rem);
+      color: var(--text-secondary);
+      max-width: 720px;
+      margin: 0 auto 2.25rem;
+      line-height: 1.6;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2.75rem;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Live Interactive Simulator */
+    .simulator-section {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 0 auto 6rem;
+      padding: 0 1.5rem;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 3rem;
+    }
+
+    .section-tag {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-desc {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    /* Simulator Window */
+    .sim-window {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), var(--shadow-glow);
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+    }
+
+    /* Chrome DevTools Top Bar Mockup */
+    .sim-chrome-bar {
+      background: rgba(14, 20, 33, 0.95);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sim-window-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .win-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    .win-dot.red { background: #ff5f56; }
+    .win-dot.yellow { background: #ffbd2e; }
+    .win-dot.green { background: #27c93f; }
+
+    .sim-devtools-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .sim-tab-item {
+      padding: 0.25rem 0.75rem;
+      border-radius: 5px;
+      cursor: default;
+    }
+
+    .sim-tab-item.active {
+      background: rgba(255, 108, 55, 0.15);
+      color: var(--brand-orange);
+      font-weight: 600;
+      border: 1px solid rgba(255, 108, 55, 0.25);
+    }
+
+    /* DevTools Extension Toolbar */
+    .sim-toolbar {
+      background: rgba(19, 27, 46, 0.85);
+      border-bottom: 1px solid var(--border);
+      padding: 0.65rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .sim-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .capture-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-green);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+    }
+
+    .sim-redaction-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+    }
+
+    /* Switch toggle */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 34px;
+      height: 18px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #334155;
+      transition: .3s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--brand-orange);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    /* Simulator Workspace Layout */
+    .sim-body {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      min-height: 480px;
+      background: rgba(10, 14, 24, 0.95);
+    }
+
+    /* Left: Request Table */
+    .sim-requests-pane {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pane-header {
+      padding: 0.6rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: rgba(14, 20, 33, 0.5);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .request-list {
+      list-style: none;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .req-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.85rem;
+    }
+
+    .req-item:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .req-item.active {
+      background: rgba(255, 108, 55, 0.09);
+      border-left: 3px solid var(--brand-orange);
+    }
+
+    .method-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      min-width: 48px;
+      text-align: center;
+    }
+
+    .method-POST { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .method-GET { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .method-PUT { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .method-DELETE { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+    .req-path-wrap {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .req-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #e2e8f0;
+    }
+
+    .req-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .status-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-200, .status-204 { color: var(--accent-green); }
+    .status-401 { color: var(--accent-red); }
+
+    /* Right: Inspector Pane */
+    .sim-inspector-pane {
+      display: flex;
+      flex-direction: column;
+      background: rgba(13, 18, 31, 0.7);
+    }
+
+    .inspector-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding: 0 1rem;
+      background: rgba(14, 20, 33, 0.5);
+    }
+
+    .inspect-tabs {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .tab-btn {
+      padding: 0.7rem 0.9rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--brand-orange);
+      border-bottom-color: var(--brand-orange);
+    }
+
+    .code-preview-area {
+      flex: 1;
+      padding: 1.25rem;
+      position: relative;
+      overflow: auto;
+      max-height: 400px;
+    }
+
+    pre.code-view {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .highlight-redacted {
+      background: rgba(255, 108, 55, 0.2);
+      color: var(--brand-orange-light);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 108, 55, 0.4);
+      font-weight: 600;
+    }
+
+    .highlight-sensitive-raw {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    /* Simulator Action Footer */
+    .sim-footer {
+      border-top: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      background: rgba(14, 20, 33, 0.8);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+    }
+
+    /* Toast Notification */
+    .toast-msg {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: rgba(16, 185, 129, 0.95);
+      color: #ffffff;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: var(--transition);
+      pointer-events: none;
+    }
+
+    .toast-msg.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Features Grid */
+    .features-section {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 0 auto 6rem;
+      padding: 0 1.5rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 10% 10%, rgba(255, 108, 55, 0.08), transparent 60%);
+      opacity: 0;
+      transition: var(--transition);
+      pointer-events: none;
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 108, 55, 0.35);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-subtle), 0 0 25px rgba(255, 108, 55, 0.1);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      background: rgba(255, 108, 55, 0.12);
+      border: 1px solid rgba(255, 108, 55, 0.25);
+      color: var(--brand-orange);
+    }
+
+    .feature-icon-box.cyan {
+      background: rgba(0, 242, 254, 0.1);
+      border-color: rgba(0, 242, 254, 0.25);
+      color: var(--accent-cyan);
+    }
+
+    .feature-icon-box.green {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: var(--accent-green);
+    }
+
+    .feature-icon-box.purple {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: rgba(139, 92, 246, 0.25);
+      color: var(--accent-purple);
+    }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* How It Works (Steps) */
+    .steps-section {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 0 auto 6rem;
+      padding: 0 1.5rem;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 1.75rem;
+      position: relative;
+    }
+
+    .step-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: rgba(255, 108, 55, 0.35);
+      margin-bottom: 0.75rem;
+    }
+
+    .step-card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #ffffff;
+    }
+
+    .step-card p {
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    /* Comparison Table Section */
+    .comparison-section {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 0 auto 6rem;
+      padding: 0 1.5rem;
+    }
+
+    .table-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow-x: auto;
+      backdrop-filter: blur(16px);
+    }
+
+    table.comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
+
+    table.comp-table th {
+      padding: 1.2rem 1.5rem;
+      background: rgba(14, 20, 33, 0.7);
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    table.comp-table th.highlight-col {
+      color: var(--brand-orange);
+      background: rgba(255, 108, 55, 0.08);
+      border-bottom-color: rgba(255, 108, 55, 0.3);
+    }
+
+    table.comp-table td {
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+    }
+
+    table.comp-table td.highlight-col {
+      background: rgba(255, 108, 55, 0.04);
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    table.comp-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .check-yes { color: var(--accent-green); font-weight: 700; }
+    .check-no { color: var(--text-muted); }
+
+    /* Security & Permissions Callout */
+    .security-section {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 0 auto 6rem;
+      padding: 0 1.5rem;
+    }
+
+    .security-banner {
+      background: linear-gradient(135deg, rgba(19, 27, 46, 0.85) 0%, rgba(13, 18, 31, 0.95) 100%);
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      border-radius: var(--radius-xl);
+      padding: 3rem 2.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      box-shadow: var(--shadow-cyan);
+    }
+
+    .security-content h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      color: #ffffff;
+    }
+
+    .security-content p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.65;
+    }
+
+    .perm-badge-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .perm-badge-item {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+    }
+
+    .perm-icon {
+      font-size: 1.25rem;
+      padding: 0.35rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+
+    .perm-badge-item strong {
+      display: block;
+      color: #ffffff;
+      font-size: 0.92rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .perm-badge-item span {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    /* FAQ Section */
+    .faq-section {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto 6rem;
+      padding: 0 1.5rem;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .faq-item:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .faq-question {
+      padding: 1.25rem 1.5rem;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .faq-icon {
+      font-size: 1.2rem;
+      color: var(--brand-orange);
+      transition: transform 0.3s ease;
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0, 1, 0, 1);
+      padding: 0 1.5rem;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      line-height: 1.65;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 350px;
+      padding-bottom: 1.25rem;
+      transition: max-height 0.3s ease-in-out;
+    }
+
+    .faq-item.open .faq-icon {
+      transform: rotate(45deg);
+    }
+
+    /* Final CTA */
+    .final-cta {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 0 auto 6rem;
+      padding: 0 1.5rem;
+      text-align: center;
+    }
+
+    .cta-card {
+      background: linear-gradient(135deg, rgba(255, 108, 55, 0.12) 0%, rgba(13, 18, 31, 0.9) 100%);
+      border: 1px solid rgba(255, 108, 55, 0.4);
+      border-radius: var(--radius-xl);
+      padding: 4rem 2rem;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .cta-card h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 1rem;
+    }
+
+    .cta-card p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    /* Footer */
+    footer.site-footer {
+      border-top: 1px solid var(--border);
+      background: rgba(7, 10, 18, 0.95);
+      padding: 4rem 1.5rem 2.5rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-grid {
+      max-width: 1240px;
+      margin: 0 auto 3rem;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+    }
+
+    .footer-brand p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: 0.75rem;
+      max-width: 320px;
+      line-height: 1.6;
+    }
+
+    .footer-col h4 {
+      color: #ffffff;
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .footer-links-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .footer-links-list a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-links-list a:hover {
+      color: var(--brand-orange);
+    }
+
+    .footer-bottom {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .sim-body {
+        grid-template-columns: 1fr;
+      }
+      .sim-requests-pane {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        max-height: 250px;
+      }
+      .security-banner {
+        grid-template-columns: 1fr;
+        padding: 2rem 1.5rem;
+      }
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .nav-links {
+        display: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-stats {
+        gap: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Glow Canvas -->
+  <div class="ambient-bg" aria-hidden="true"></div>
+
+  <!-- Main Navbar -->
+  <header class="navbar">
+    <div class="nav-inner">
+      <a href="index.html" class="brand" id="nav-brand">
+        <svg class="brand-icon" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="128" height="128" rx="28" fill="#141B2D"/>
+          <circle cx="28" cy="64" r="10" stroke="#00F2FE" stroke-width="3" fill="#1E293B"/>
+          <path d="M38 64 L62 64 C70 64 74 52 82 52 L88 52" stroke="#00F2FE" stroke-width="3" stroke-dasharray="4 4"/>
+          <circle cx="92" cy="52" r="16" fill="#FF6C37"/>
+          <path d="M87 56 L97 48 L93 59 Z" fill="#FFFFFF"/>
+        </svg>
+        <span>API to Postman</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="#demo" id="nav-link-demo">Interactive Demo</a></li>
+          <li><a href="#features" id="nav-link-features">Features</a></li>
+          <li><a href="#how-it-works" id="nav-link-how">How It Works</a></li>
+          <li><a href="#security" id="nav-link-security">Security & Privacy</a></li>
+          <li><a href="#faq" id="nav-link-faq">FAQ</a></li>
+          <li><a href="privacy-policy.html" id="nav-link-privacy">Privacy Policy</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/dhirajraut1/api-to-postman" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" id="btn-github-nav">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          GitHub
+        </a>
+        <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" id="btn-add-chrome-nav">
+          Add to Chrome
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="overview">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      <span>Chrome Manifest V3 DevTools Extension • Free & Open Source</span>
+    </div>
+
+    <h1 class="hero-title">
+      Capture Browser Network Traffic.<br>
+      Export Clean <span class="gradient-text">Postman Collections</span>.
+    </h1>
+
+    <p class="hero-subtitle">
+      Record HTTP/HTTPS requests directly inside Chrome DevTools, scrub sensitive credentials with automated redaction, and export pristine Postman v2.1 schemas or push directly to your Postman workspace.
+    </p>
+
+    <div class="hero-cta-group">
+      <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="hero-cta-chrome">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C8.21 0 4.83 1.76 2.61 4.5l4.5 7.79C7.75 9.4 9.69 7.4 12 7.4h9.85C19.78 3.07 16.19 0 12 0zM2.08 5.62C.76 7.48 0 9.66 0 12c0 5.68 4.01 10.43 9.38 11.66l4.5-7.79c-2.31 0-4.25-1.99-4.89-4.89L2.08 5.62zM21.92 5.62H12.92c1.99 1.15 3.25 3.32 3.25 5.78 0 .84-.15 1.63-.42 2.37l-4.5 7.79C16.99 21.56 24 17.58 24 12c0-2.34-.76-4.52-2.08-6.38zM12 9.2c1.55 0 2.8 1.25 2.8 2.8s-1.25 2.8-2.8 2.8-2.8-1.25-2.8-2.8 1.25-2.8 2.8-2.8z"/>
+        </svg>
+        Add to Chrome (Free)
+      </a>
+
+      <a href="#demo" class="btn btn-outline" id="hero-cta-demo">
+        Try Interactive Simulator ↓
+      </a>
+
+      <a href="https://github.com/dhirajraut1/api-to-postman" target="_blank" rel="noopener noreferrer" class="btn btn-ghost" id="hero-cta-docs">
+        View Source Code ↗
+      </a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-value">v2.1</span>
+        <span class="stat-label">Official Postman Schema</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">100%</span>
+        <span class="stat-label">Client-Side & Private</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">0ms</span>
+        <span class="stat-label">Zero Setup / No Proxy</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">MV3</span>
+        <span class="stat-label">Chrome Manifest V3</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Interactive Simulator / Preview -->
+  <section class="simulator-section" id="demo">
+    <div class="section-header">
+      <div class="section-tag">Interactive Preview</div>
+      <h2 class="section-title">See It in Action Before Installing</h2>
+      <p class="section-desc">Click any simulated network request below, toggle token redaction, and preview how it translates to Postman Collection JSON or cURL.</p>
+    </div>
+
+    <div class="sim-window">
+      <!-- Mock DevTools Window Bar -->
+      <div class="sim-chrome-bar">
+        <div class="sim-window-controls">
+          <span class="win-dot red"></span>
+          <span class="win-dot yellow"></span>
+          <span class="win-dot green"></span>
+        </div>
+        <div class="sim-devtools-tabs">
+          <span class="sim-tab-item">Elements</span>
+          <span class="sim-tab-item">Console</span>
+          <span class="sim-tab-item">Network</span>
+          <span class="sim-tab-item active">API to Postman</span>
+          <span class="sim-tab-item">Application</span>
+        </div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">DevTools Tab #104</div>
+      </div>
+
+      <!-- DevTools Panel Toolbar -->
+      <div class="sim-toolbar">
+        <div class="sim-btn-group">
+          <button class="btn btn-primary btn-sm" id="sim-btn-recording" style="pointer-events: none;">
+            ● Recording Active
+          </button>
+          <span class="capture-status-badge">4 requests captured</span>
+        </div>
+
+        <div class="sim-redaction-toggle">
+          <span>🛡️ Redact Sensitive Keys</span>
+          <label class="switch" title="Toggle token redaction">
+            <input type="checkbox" id="redaction-switch" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Workspace Body -->
+      <div class="sim-body">
+        <!-- Request List Pane -->
+        <div class="sim-requests-pane">
+          <div class="pane-header">
+            <span>Captured Requests</span>
+            <span>Status</span>
+          </div>
+          <ul class="request-list" id="sim-request-list">
+            <!-- Will be populated by JS -->
+          </ul>
+        </div>
+
+        <!-- Inspector & Export Pane -->
+        <div class="sim-inspector-pane">
+          <div class="inspector-nav">
+            <div class="inspect-tabs">
+              <button class="tab-btn active" data-tab="json" id="tab-btn-json">Postman Collection v2.1</button>
+              <button class="tab-btn" data-tab="curl" id="tab-btn-curl">cURL Snippet</button>
+              <button class="tab-btn" data-tab="headers" id="tab-btn-headers">Request Details</button>
+            </div>
+            <div>
+              <button class="btn btn-outline btn-sm" id="btn-copy-preview">
+                📋 Copy Code
+              </button>
+            </div>
+          </div>
+
+          <div class="code-preview-area">
+            <pre class="code-view" id="code-display"></pre>
+          </div>
+
+          <div class="sim-footer">
+            <span style="color: var(--text-muted);">Selected Request: <strong id="sim-selected-name" style="color: #ffffff;">POST /api/v1/auth/login</strong></span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-outline btn-sm" id="btn-sim-download">Download JSON</button>
+              <button class="btn btn-primary btn-sm" id="btn-sim-publish">Publish to Workspace ↗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="features-section" id="features">
+    <div class="section-header">
+      <div class="section-tag">Powerful Capabilities</div>
+      <h2 class="section-title">Built for Modern API Engineering</h2>
+      <p class="section-desc">Everything you need to capture, sanitize, and test production endpoints without breaking your development flow.</p>
+    </div>
+
+    <div class="features-grid">
+      <!-- Feature 1 -->
+      <div class="feature-card">
+        <div class="feature-icon-box">⚡</div>
+        <h3>Zero-Proxy Native DevTools</h3>
+        <p>No Charles, Fiddler, or local proxy certificates required. Integrates directly into your existing Chrome DevTools pane via Chrome DevTools Protocol (CDP).</p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="feature-card">
+        <div class="feature-icon-box cyan">🛡️</div>
+        <h3>Automated Credential Redaction</h3>
+        <p>Pre-configured safety net automatically scrubs Bearer tokens, Authorization headers, session cookies, and sensitive payload keys, replacing them with Postman environment variables.</p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="feature-card">
+        <div class="feature-icon-box green">📦</div>
+        <h3>Postman Collection v2.1 Format</h3>
+        <p>Produces fully spec-compliant Postman Collection v2.1 JSON files with organized folders, URL path arrays, query parameters, and raw JSON payloads.</p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="feature-card">
+        <div class="feature-icon-box purple">☁️</div>
+        <h3>Direct Workspace Synchronization</h3>
+        <p>Optionally connect your Postman API key and Workspace ID to create collections in your cloud team workspace with a single click.</p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="feature-card">
+        <div class="feature-icon-box">💻</div>
+        <h3>Instant cURL Generator</h3>
+        <p>Copy any captured endpoint as a ready-to-execute cURL command with masked secrets so you can immediately debug in your terminal or share with colleagues.</p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="feature-card">
+        <div class="feature-icon-box cyan">🔒</div>
+        <h3>Strict Local Privacy (Zero Telemetry)</h3>
+        <p>All captured data stays in your browser's local memory. No analytics pings, no telemetry, no advertisements, and no tracking databases.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="steps-section" id="how-it-works">
+    <div class="section-header">
+      <div class="section-tag">Fast & Simple</div>
+      <h2 class="section-title">From Browser to Postman in 3 Steps</h2>
+      <p class="section-desc">Streamline what used to take 20 minutes of tedious manual copying into a 5-second workflow.</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <h3>Open DevTools & Start</h3>
+        <p>Press <code>F12</code> on any web page, navigate to the <strong>API to Postman</strong> panel, and click <strong>Start capture</strong>. Chrome attaches the debugger cleanly.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <h3>Reproduce the Workflow</h3>
+        <p>Interact with the web app: submit forms, trigger GraphQL queries, or complete checkouts. Requests, payloads, and response codes appear in real time.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <h3>Filter, Redact & Export</h3>
+        <p>Select the requests you want, review the automated credential masking, and download the Postman Collection JSON or sync directly to your workspace.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Section -->
+  <section class="comparison-section">
+    <div class="section-header">
+      <div class="section-tag">Comparison</div>
+      <h2 class="section-title">Why Developers Choose API to Postman</h2>
+      <p class="section-desc">How our dedicated Chrome extension compares with traditional manual workflows.</p>
+    </div>
+
+    <div class="table-card">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Workflow Feature</th>
+            <th class="highlight-col">API to Postman</th>
+            <th>HAR File Export</th>
+            <th>Manual "Copy as cURL"</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Official Postman Collection v2.1 Output</td>
+            <td class="highlight-col"><span class="check-yes">✓ Native Export</span></td>
+            <td><span class="check-no">Requires Converter</span></td>
+            <td><span class="check-no">Manual Import One-by-One</span></td>
+          </tr>
+          <tr>
+            <td>Automated Token & Password Redaction</td>
+            <td class="highlight-col"><span class="check-yes">✓ Automated Parameterization</span></td>
+            <td><span class="check-no">✗ Leaks Raw Secrets</span></td>
+            <td><span class="check-no">✗ Raw Tokens in Clipboard</span></td>
+          </tr>
+          <tr>
+            <td>Direct Postman Workspace Cloud Sync</td>
+            <td class="highlight-col"><span class="check-yes">✓ 1-Click Sync</span></td>
+            <td><span class="check-no">✗ Not Supported</span></td>
+            <td><span class="check-no">✗ Not Supported</span></td>
+          </tr>
+          <tr>
+            <td>Interactive Search & Multi-Selection</td>
+            <td class="highlight-col"><span class="check-yes">✓ Yes (Checkboxes & Filter)</span></td>
+            <td><span class="check-no">✗ Exports Entire Tab Dump</span></td>
+            <td><span class="check-no">✗ Single Request Only</span></td>
+          </tr>
+          <tr>
+            <td>Local Privacy / No Third-Party Proxy</td>
+            <td class="highlight-col"><span class="check-yes">✓ 100% In-Memory</span></td>
+            <td><span class="check-yes">✓ Local File</span></td>
+            <td><span class="check-yes">✓ Local Clipboard</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Security & Chrome Web Store Transparency -->
+  <section class="security-section" id="security">
+    <div class="security-banner">
+      <div class="security-content">
+        <span class="section-tag" style="color: var(--brand-orange-light);">Privacy First</span>
+        <h2>Chrome Web Store Policy Compliance</h2>
+        <p>
+          We adhere strictly to the <strong>Google Chrome Web Store Developer Program Policies</strong>, specifically regarding the Limited Use requirements. Our extension requests minimal permissions and never monetizes your data.
+        </p>
+        <a href="privacy-policy.html" class="btn btn-outline" id="btn-read-full-policy">
+          Read Full Privacy Policy →
+        </a>
+      </div>
+
+      <div class="perm-badge-list">
+        <div class="perm-badge-item">
+          <div class="perm-icon">🐞</div>
+          <div>
+            <strong>debugger Permission</strong>
+            <span>Attaches via Chrome DevTools Protocol (CDP) strictly to inspect HTTP headers and payloads of the active tab during user-initiated captures.</span>
+          </div>
+        </div>
+
+        <div class="perm-badge-item">
+          <div class="perm-icon">💾</div>
+          <div>
+            <strong>storage Permission</strong>
+            <span>Preserves your Postman workspace ID and preferences locally in <code>chrome.storage.local</code> on your own device.</span>
+          </div>
+        </div>
+
+        <div class="perm-badge-item">
+          <div class="perm-icon">🌐</div>
+          <div>
+            <strong>https://api.postman.com/*</strong>
+            <span>Used strictly to publish collections to your own Postman account when you click "Create collection in Postman".</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Frequently Asked Questions -->
+  <section class="faq-section" id="faq">
+    <div class="section-header">
+      <div class="section-tag">FAQ</div>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <p class="section-desc">Got questions about how API to Postman works or how your data is handled?</p>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Why does Chrome display a banner saying "'API to Postman' started debugging this browser"?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          Chrome requires this notification whenever an extension uses the official <code>debugger</code> API to interact with the Chrome DevTools Protocol. This is a standard security banner that guarantees full transparency. The extension only captures network events while you have the capture running.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Are my passwords and API keys safe during export?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          Yes! By default, the extension scrubs common authentication headers (<code>Authorization</code>, <code>Cookie</code>, <code>X-API-Key</code>) and sensitive JSON payload fields (<code>password</code>, <code>token</code>, <code>secret</code>, <code>otp</code>), replacing them with Postman environment variable templates like <code>{{authorization}}</code>. You can also inspect the collection before downloading.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Do you store my Postman API Key on remote servers?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          No. We do not have any remote servers or databases. If you choose to save your Postman API key, it is kept exclusively in your computer's local <code>chrome.storage.local</code>. You can also download the collection JSON without entering any API key at all!
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Can I select only specific requests instead of the entire log?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          Yes. The extension UI provides checkboxes for individual requests, a "Select visible" toggle, and search/filter controls so you can isolate and export only the specific API calls you care about.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Is the extension open source?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          Yes, the complete TypeScript codebase is licensed under the MIT License and hosted on GitHub. Contributions, issues, and audit requests are welcome.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final Call to Action -->
+  <section class="final-cta">
+    <div class="cta-card">
+      <h2>Start Exporting Postman Collections Today</h2>
+      <p>Save hours copying requests and parameterizing tokens. Install the extension in seconds and elevate your API development workflow.</p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="bottom-cta-chrome">
+          Install from Chrome Web Store (Free)
+        </a>
+        <a href="https://github.com/dhirajraut1/api-to-postman" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="bottom-cta-github">
+          View on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="brand" style="font-size: 1.15rem;">
+          <svg class="brand-icon" viewBox="0 0 128 128" fill="none" style="width:28px;height:28px;">
+            <rect width="128" height="128" rx="28" fill="#141B2D"/>
+            <circle cx="28" cy="64" r="10" stroke="#00F2FE" stroke-width="3" fill="#1E293B"/>
+            <path d="M38 64 L62 64 C70 64 74 52 82 52 L88 52" stroke="#00F2FE" stroke-width="3" stroke-dasharray="4 4"/>
+            <circle cx="92" cy="52" r="16" fill="#FF6C37"/>
+            <path d="M87 56 L97 48 L93 59 Z" fill="#FFFFFF"/>
+          </svg>
+          API to Postman
+        </a>
+        <p>The Chrome DevTools extension for generating clean Postman Collections from real browser traffic with zero hassle.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul class="footer-links-list">
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#demo">Simulator</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Legal & Privacy</h4>
+        <ul class="footer-links-list">
+          <li><a href="privacy-policy.html">Privacy Policy</a></li>
+          <li><a href="privacy-policy.html#permissions">Permissions Justification</a></li>
+          <li><a href="privacy-policy.html#redaction">Redaction Practices</a></li>
+          <li><a href="https://github.com/dhirajraut1/api-to-postman/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Community</h4>
+        <ul class="footer-links-list">
+          <li><a href="https://github.com/dhirajraut1/api-to-postman" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+          <li><a href="https://github.com/dhirajraut1/api-to-postman/issues" target="_blank" rel="noopener noreferrer">Issue Tracker</a></li>
+          <li><a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer">Chrome Web Store</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>© 2026 API to Postman. Open source under the MIT License.</div>
+      <div style="display: flex; gap: 1.5rem;">
+        <a href="privacy-policy.html" style="color: var(--text-secondary); text-decoration: none;">Privacy Policy</a>
+        <a href="https://github.com/dhirajraut1/api-to-postman" target="_blank" rel="noopener noreferrer" style="color: var(--text-secondary); text-decoration: none;">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Element -->
+  <div class="toast-msg" id="toast">Copied to clipboard!</div>
+
+  <!-- Interactive Simulator & UX Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Mock Sample Requests Data
+      const sampleRequests = [
+        {
+          id: 'req-1',
+          method: 'POST',
+          url: 'https://api.example.com/api/v1/auth/login',
+          path: '/api/v1/auth/login',
+          status: 200,
+          statusText: 'OK',
+          time: '124 ms',
+          headers: [
+            { name: 'Content-Type', value: 'application/json' },
+            { name: 'Accept', value: 'application/json' },
+            { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.t-ID123' },
+            { name: 'User-Agent', value: 'Mozilla/5.0 Chrome/116.0.0.0' }
+          ],
+          bodyRaw: {
+            username: 'developer@example.com',
+            password: 'superSecretPassword123!'
+          }
+        },
+        {
+          id: 'req-2',
+          method: 'GET',
+          url: 'https://api.example.com/api/v1/user/profile?include=settings',
+          path: '/api/v1/user/profile',
+          status: 200,
+          statusText: 'OK',
+          time: '78 ms',
+          headers: [
+            { name: 'Accept', value: 'application/json' },
+            { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.t-ID123' },
+            { name: 'Cookie', value: 'session_id=s%3A9f8472bbd928374a' }
+          ],
+          bodyRaw: null
+        },
+        {
+          id: 'req-3',
+          method: 'PUT',
+          url: 'https://api.example.com/api/v1/cart/items/492',
+          path: '/api/v1/cart/items/492',
+          status: 204,
+          statusText: 'No Content',
+          time: '95 ms',
+          headers: [
+            { name: 'Content-Type', value: 'application/json' },
+            { name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.t-ID123' }
+          ],
+          bodyRaw: {
+            quantity: 3,
+            couponCode: 'SAVE20'
+          }
+        },
+        {
+          id: 'req-4',
+          method: 'POST',
+          url: 'https://api.example.com/api/v1/checkout/pay',
+          path: '/api/v1/checkout/pay',
+          status: 401,
+          statusText: 'Unauthorized',
+          time: '64 ms',
+          headers: [
+            { name: 'Content-Type', value: 'application/json' },
+            { name: 'Authorization', value: 'Bearer invalid_or_expired_token' }
+          ],
+          bodyRaw: {
+            amount: 89.50,
+            currency: 'USD',
+            secret_key: 'sk_test_51Mz93kd84920kdf83'
+          }
+        }
+      ];
+
+      let selectedIndex = 0;
+      let activeTab = 'json';
+      let redactEnabled = true;
+
+      const requestListEl = document.getElementById('sim-request-list');
+      const codeDisplayEl = document.getElementById('code-display');
+      const selectedNameEl = document.getElementById('sim-selected-name');
+      const redactionSwitch = document.getElementById('redaction-switch');
+      const toastEl = document.getElementById('toast');
+      const copyBtn = document.getElementById('btn-copy-preview');
+
+      // Populate Request List
+      function renderRequestList() {
+        requestListEl.innerHTML = '';
+        sampleRequests.forEach((req, idx) => {
+          const li = document.createElement('li');
+          li.className = `req-item ${idx === selectedIndex ? 'active' : ''}`;
+          li.id = `sim-req-item-${idx}`;
+          li.innerHTML = `
+            <span class="method-tag method-${req.method}">${req.method}</span>
+            <div class="req-path-wrap">
+              <div class="req-path">${req.path}</div>
+              <div class="req-meta">${req.time} • ${req.headers.length} headers</div>
+            </div>
+            <span class="status-badge status-${req.status}">${req.status}</span>
+          `;
+          li.addEventListener('click', () => {
+            selectedIndex = idx;
+            renderRequestList();
+            updateInspector();
+          });
+          requestListEl.appendChild(li);
+        });
+      }
+
+      // Format Postman v2.1 Collection JSON
+      function generatePostmanJson(req, redact) {
+        const headers = req.headers.map(h => {
+          let val = h.value;
+          if (redact && /^(authorization|proxy-authorization|cookie|set-cookie|x-api-key)$/i.test(h.name)) {
+            val = `{{${h.name.toLowerCase().replace(/[^a-z0-9_]/g, '_')}}}`;
+          }
+          return { key: h.name, value: val, type: 'text' };
+        });
+
+        let bodyObj = null;
+        if (req.bodyRaw) {
+          const clonedBody = { ...req.bodyRaw };
+          if (redact) {
+            for (const k of Object.keys(clonedBody)) {
+              if (/^(password|access_token|refresh_token|secret_key|secret|otp|api_key)$/i.test(k)) {
+                clonedBody[k] = `{{${k}}}`;
+              }
+            }
+          }
+          bodyObj = {
+            mode: 'raw',
+            raw: JSON.stringify(clonedBody, null, 2),
+            options: { raw: { language: 'json' } }
+          };
+        }
+
+        const urlObj = {
+          raw: req.url,
+          protocol: 'https',
+          host: ['api', 'example', 'com'],
+          path: req.path.split('/').filter(Boolean)
+        };
+
+        const postmanSchema = {
+          info: {
+            _postman_id: 'a98218bf-304b-4ec2-9e81-7918f0cb1820',
+            name: 'API to Postman Captured Collection',
+            schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
+          },
+          item: [
+            {
+              name: `${req.method} ${req.path}`,
+              request: {
+                method: req.method,
+                header: headers,
+                ...(bodyObj ? { body: bodyObj } : {}),
+                url: urlObj,
+                description: 'Exported via API to Postman Chrome DevTools Extension'
+              },
+              response: []
+            }
+          ]
+        };
+
+        return JSON.stringify(postmanSchema, null, 2);
+      }
+
+      // Generate cURL command
+      function generateCurl(req, redact) {
+        let lines = [`curl -X ${req.method} '${req.url}'`];
+        req.headers.forEach(h => {
+          let val = h.value;
+          if (redact && /^(authorization|proxy-authorization|cookie|set-cookie|x-api-key)$/i.test(h.name)) {
+            val = `{{${h.name.toLowerCase().replace(/[^a-z0-9_]/g, '_')}}}`;
+          }
+          lines.push(`  -H '${h.name}: ${val}'`);
+        });
+
+        if (req.bodyRaw) {
+          const clonedBody = { ...req.bodyRaw };
+          if (redact) {
+            for (const k of Object.keys(clonedBody)) {
+              if (/^(password|access_token|refresh_token|secret_key|secret|otp|api_key)$/i.test(k)) {
+                clonedBody[k] = `{{${k}}}`;
+              }
+            }
+          }
+          lines.push(`  --data '${JSON.stringify(clonedBody)}'`);
+        }
+
+        return lines.join(' \\\n');
+      }
+
+      // Generate Request Details
+      function generateDetails(req, redact) {
+        let text = `GENERAL\nRequest URL: ${req.url}\nRequest Method: ${req.method}\nStatus Code: ${req.status} ${req.statusText}\n\nREQUEST HEADERS\n`;
+        req.headers.forEach(h => {
+          let val = h.value;
+          if (redact && /^(authorization|proxy-authorization|cookie|set-cookie|x-api-key)$/i.test(h.name)) {
+            val = `{{${h.name.toLowerCase().replace(/[^a-z0-9_]/g, '_')}}} (REDACTED)`;
+          }
+          text += `${h.name}: ${val}\n`;
+        });
+
+        if (req.bodyRaw) {
+          text += `\nREQUEST PAYLOAD (JSON)\n`;
+          const cloned = { ...req.bodyRaw };
+          if (redact) {
+            for (const k of Object.keys(cloned)) {
+              if (/^(password|access_token|refresh_token|secret_key|secret|otp|api_key)$/i.test(k)) {
+                cloned[k] = `{{${k}}} (REDACTED)`;
+              }
+            }
+          }
+          text += JSON.stringify(cloned, null, 2);
+        }
+
+        return text;
+      }
+
+      function updateInspector() {
+        const req = sampleRequests[selectedIndex];
+        selectedNameEl.textContent = `${req.method} ${req.path}`;
+
+        let output = '';
+        if (activeTab === 'json') {
+          output = generatePostmanJson(req, redactEnabled);
+        } else if (activeTab === 'curl') {
+          output = generateCurl(req, redactEnabled);
+        } else {
+          output = generateDetails(req, redactEnabled);
+        }
+
+        codeDisplayEl.textContent = output;
+      }
+
+      // Redaction Switch Listener
+      redactionSwitch.addEventListener('change', (e) => {
+        redactEnabled = e.target.checked;
+        updateInspector();
+        showToast(redactEnabled ? 'Sensitive redaction enabled' : 'Sensitive values exposed');
+      });
+
+      // Tabs click
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeTab = btn.getAttribute('data-tab');
+          updateInspector();
+        });
+      });
+
+      // Copy Button
+      function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        setTimeout(() => toastEl.classList.remove('show'), 2400);
+      }
+
+      copyBtn.addEventListener('click', () => {
+        const text = codeDisplayEl.textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Copied to clipboard! 📋');
+        }).catch(() => {
+          showToast('Failed to copy');
+        });
+      });
+
+      document.getElementById('btn-sim-download').addEventListener('click', () => {
+        const req = sampleRequests[selectedIndex];
+        const jsonStr = generatePostmanJson(req, redactEnabled);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `postman-collection-${req.path.replace(/[^a-z0-9]/gi, '_')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Downloading Postman Collection JSON... 🚀');
+      });
+
+      document.getElementById('btn-sim-publish').addEventListener('click', () => {
+        showToast('In the extension, this pushes directly to your Postman Workspace!');
+      });
+
+      // FAQ Accordion
+      document.querySelectorAll('.faq-question').forEach(button => {
+        button.addEventListener('click', () => {
+          const item = button.parentElement;
+          const isOpen = item.classList.contains('open');
+
+          // Close all others
+          document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+
+          if (!isOpen) {
+            item.classList.add('open');
+          }
+        });
+      });
+
+      // Initialize
+      renderRequestList();
+      updateInspector();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141b2d" />
+      <stop offset="100%" stop-color="#0a0e17" />
+    </linearGradient>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff7b39" />
+      <stop offset="100%" stop-color="#ff451a" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#4facfe" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="url(#bgGrad)" stroke="rgba(255, 108, 55, 0.3)" stroke-width="2" />
+
+  <!-- Subtle grid lines -->
+  <path d="M4 44 h120 M4 84 h120 M44 4 v120 M84 4 v120" stroke="rgba(255, 255, 255, 0.03)" stroke-width="1" />
+
+  <!-- Network / DevTools Node (Left) -->
+  <g transform="translate(24, 64)">
+    <circle cx="0" cy="0" r="10" fill="#1e293b" stroke="url(#accentGrad)" stroke-width="2.5" />
+    <circle cx="0" cy="0" r="4" fill="#00f2fe" />
+  </g>
+
+  <!-- Bridge connector with data packets -->
+  <path d="M34 64 L56 64 C64 64 68 52 76 52 L84 52" fill="none" stroke="url(#accentGrad)" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 4" />
+  <circle cx="56" cy="64" r="3" fill="#00f2fe" filter="url(#glow)" />
+
+  <!-- Postman Orange Hex / Rocket Node (Right) -->
+  <g transform="translate(86, 52)">
+    <circle cx="0" cy="0" r="18" fill="url(#brandGrad)" filter="url(#glow)" />
+    <!-- Paper airplane / Postman messenger wing icon -->
+    <path d="M-6 4 L6 -6 L1 8 Z" fill="#ffffff" />
+    <path d="M-6 4 L-1 0 L1 8 Z" fill="rgba(255,255,255,0.7)" />
+  </g>
+
+  <!-- Bottom API code badge -->
+  <rect x="32" y="90" width="64" height="18" rx="6" fill="rgba(255, 108, 55, 0.12)" stroke="rgba(255, 108, 55, 0.4)" stroke-width="1" />
+  <text x="64" y="103" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="700" fill="#ff7b39" text-anchor="middle" letter-spacing="1">API → POSTMAN</text>
+</svg>

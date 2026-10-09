@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy | API to Postman Chrome Extension</title>
+  <meta name="description" content="Privacy Policy for API to Postman Chrome DevTools Extension. Learn how network traffic and credentials are handled locally with zero tracking and full transparency.">
+  <link rel="icon" type="image/svg+xml" href="public/icons/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(255, 108, 55, 0.4);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --brand-orange: #ff6c37;
+      --brand-orange-light: #ff8555;
+      --accent-cyan: #00f2fe;
+      --accent-green: #10b981;
+      --accent-purple: #8b5cf6;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --glow-orange: rgba(255, 108, 55, 0.15);
+      --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.65;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(255, 108, 55, 0.07) 0%, transparent 45%),
+        radial-gradient(circle at 85% 30%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+    }
+
+    /* Header Nav */
+    header.site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(10, 14, 23, 0.82);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.85rem 1.5rem;
+    }
+
+    .nav-container {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-outline {
+      padding: 0.45rem 0.95rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      text-decoration: none;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(255, 108, 55, 0.12);
+      color: var(--brand-orange);
+      border: 1px solid rgba(255, 108, 55, 0.25);
+    }
+
+    /* Hero / Banner */
+    .policy-hero {
+      max-width: 1180px;
+      margin: 3rem auto 2rem;
+      padding: 0 1.5rem;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .policy-title {
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+    }
+
+    .policy-subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 750px;
+    }
+
+    /* Summary highlights */
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .highlight-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .highlight-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .highlight-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .highlight-card p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    /* Main Content Layout */
+    .content-wrapper {
+      max-width: 1180px;
+      margin: 0 auto 5rem;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    /* Sidebar Table of Contents */
+    .toc-sticky {
+      position: sticky;
+      top: 5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .toc-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 0.85rem;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toc-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      transition: var(--transition);
+      border-left: 2px solid transparent;
+    }
+
+    .toc-link:hover, .toc-link.active {
+      color: var(--brand-orange);
+      background: rgba(255, 108, 55, 0.08);
+      border-left-color: var(--brand-orange);
+    }
+
+    /* Document Body */
+    .policy-document {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+    }
+
+    .policy-section {
+      margin-bottom: 2.75rem;
+      scroll-margin-top: 6rem;
+    }
+
+    .policy-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .policy-section h2 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 0.5rem;
+    }
+
+    .section-num {
+      color: var(--brand-orange);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+    }
+
+    .policy-section p {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      line-height: 1.7;
+    }
+
+    .policy-section ul, .policy-section ol {
+      margin: 0.75rem 0 1.25rem 1.5rem;
+      color: #cbd5e1;
+      font-size: 0.95rem;
+    }
+
+    .policy-section li {
+      margin-bottom: 0.5rem;
+      line-height: 1.6;
+    }
+
+    .policy-section strong {
+      color: #ffffff;
+    }
+
+    /* Permission Table */
+    .table-container {
+      overflow-x: auto;
+      margin: 1.25rem 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    table.permissions-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    table.permissions-table th {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    table.permissions-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+      vertical-align: top;
+    }
+
+    table.permissions-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255, 255, 255, 0.07);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: var(--accent-cyan);
+    }
+
+    .callout-box {
+      background: rgba(16, 185, 129, 0.08);
+      border-left: 3px solid var(--accent-green);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+    }
+
+    .callout-box.warning {
+      background: rgba(255, 108, 55, 0.08);
+      border-left-color: var(--brand-orange);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: #ffffff;
+      font-size: 0.9rem;
+      margin-bottom: 0.35rem;
+    }
+
+    /* Footer */
+    footer.site-footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border-color);
+      background: rgba(10, 14, 23, 0.9);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .footer-content {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--brand-orange);
+    }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      .content-wrapper {
+        grid-template-columns: 1fr;
+      }
+      .toc-sticky {
+        display: none;
+      }
+      .policy-document {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand-link" id="brand-logo-link">
+        <svg class="brand-icon" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="128" height="128" rx="28" fill="#141B2D"/>
+          <circle cx="28" cy="64" r="10" stroke="#00F2FE" stroke-width="3" fill="#1E293B"/>
+          <path d="M38 64 L62 64 C70 64 74 52 82 52 L88 52" stroke="#00F2FE" stroke-width="3" stroke-dasharray="4 4"/>
+          <circle cx="92" cy="52" r="16" fill="#FF6C37"/>
+          <path d="M87 56 L97 48 L93 59 Z" fill="#FFFFFF"/>
+        </svg>
+        <span>API to Postman</span>
+      </a>
+
+      <div class="nav-actions">
+        <a href="index.html" class="btn-outline" id="nav-home-btn">← Back to Overview</a>
+        <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer" class="btn-outline" id="nav-cws-btn">Chrome Web Store ↗</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero / Header -->
+  <section class="policy-hero">
+    <div class="hero-meta">
+      <span class="badge-primary">Chrome Web Store Policy Compliant</span>
+      <span style="color: var(--text-muted); font-size: 0.85rem;">Effective Date: October 9, 2026</span>
+      <span style="color: var(--text-muted); font-size: 0.85rem;">• Version 0.1.1</span>
+    </div>
+    <h1 class="policy-title">Privacy Policy</h1>
+    <p class="policy-subtitle">
+      Transparency is central to how we build. <strong>API to Postman</strong> is designed to operate locally inside your browser DevTools without remote tracking, telemetry, or external monetization.
+    </p>
+
+    <!-- Top Key Highlights for Chrome Store Reviewers & Users -->
+    <div class="highlights-grid">
+      <div class="highlight-card">
+        <span class="highlight-icon">💻</span>
+        <h3>100% Client-Side Processing</h3>
+        <p>All network inspection and Postman collection generation takes place strictly in memory on your local machine.</p>
+      </div>
+
+      <div class="highlight-card">
+        <span class="highlight-icon">🚫</span>
+        <h3>Zero Telemetry & Tracking</h3>
+        <p>No Google Analytics, no telemetry pings, no advertising SDKs, and zero tracking cookies. We do not track what you capture.</p>
+      </div>
+
+      <div class="highlight-card">
+        <span class="highlight-icon">🔒</span>
+        <h3>Automatic Redaction</h3>
+        <p>Sensitive headers like <code>Authorization</code> and cookies are converted into Postman template variables prior to export.</p>
+      </div>
+
+      <div class="highlight-card">
+        <span class="highlight-icon">🌐</span>
+        <h3>Direct Postman API Only</h3>
+        <p>The extension communicates externally solely with <code>api.postman.com</code> when you voluntarily publish a collection.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Layout -->
+  <main class="content-wrapper">
+    <!-- Sticky Table of Contents -->
+    <aside class="toc-sticky" aria-label="Table of Contents">
+      <div class="toc-title">Policy Sections</div>
+      <ul class="toc-list" id="toc-nav">
+        <li><a href="#single-purpose" class="toc-link">1. Single Purpose</a></li>
+        <li><a href="#data-collection" class="toc-link">2. Data Handled</a></li>
+        <li><a href="#permissions" class="toc-link">3. Chrome Permissions</a></li>
+        <li><a href="#data-transfer" class="toc-link">4. Data Sharing & Transfer</a></li>
+        <li><a href="#redaction" class="toc-link">5. Security & Redaction</a></li>
+        <li><a href="#storage-retention" class="toc-link">6. Storage & Deletion</a></li>
+        <li><a href="#user-rights" class="toc-link">7. User Rights (GDPR/CCPA)</a></li>
+        <li><a href="#updates" class="toc-link">8. Policy Revisions</a></li>
+        <li><a href="#contact" class="toc-link">9. Contact & Source</a></li>
+      </ul>
+    </aside>
+
+    <!-- Document Content -->
+    <article class="policy-document">
+      
+      <!-- Section 1 -->
+      <section class="policy-section" id="single-purpose">
+        <h2><span class="section-num">01.</span> Single Purpose Statement</h2>
+        <p>
+          <strong>API to Postman</strong> is a developer productivity browser extension. Its single, explicit purpose is to enable web developers, QA engineers, and security researchers to inspect HTTP/HTTPS network traffic initiated in their Chrome DevTools session and export selected requests into standard <strong>Postman Collection (v2.1)</strong> JSON format or publish them to a designated Postman workspace.
+        </p>
+        <p>
+          The extension does not serve advertisements, monetize user data, profile user behavior, perform background page scanning, or modify webpage DOM content.
+        </p>
+      </section>
+
+      <!-- Section 2 -->
+      <section class="policy-section" id="data-collection">
+        <h2><span class="section-num">02.</span> Types of Data Handled</h2>
+        <p>
+          In fulfilling its single purpose, the extension temporarily interacts with the following categories of data:
+        </p>
+        <ul>
+          <li>
+            <strong>Network Traffic Data:</strong> URLs, HTTP request methods (GET, POST, etc.), query parameters, request headers, request payloads/bodies, response status codes, response headers, and response size metrics.
+          </li>
+          <li>
+            <strong>User Configuration Settings:</strong> Optional Postman Personal Access Key (API Key), Postman Workspace ID, and preferred default collection name.
+          </li>
+          <li>
+            <strong>UI Filter State:</strong> Local filters applied during inspection (method filter, status filter, search strings).
+          </li>
+        </ul>
+        <div class="callout-box">
+          <div class="callout-title">No Personal Identification or Surreptitious Logging</div>
+          <p style="margin: 0; font-size: 0.88rem; color: #d1fae5;">
+            The extension does NOT collect your IP address, device fingerprints, browsing history outside of inspected tabs, or any biometric/personal demographic data.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 3 -->
+      <section class="policy-section" id="permissions">
+        <h2><span class="section-num">03.</span> Browser Permissions Justification</h2>
+        <p>
+          In accordance with Google Chrome Web Store Developer Program Policies, the extension requests only the minimum necessary permissions required to fulfill its functionality:
+        </p>
+
+        <div class="table-container">
+          <table class="permissions-table">
+            <thead>
+              <tr>
+                <th>Permission</th>
+                <th>Scope</th>
+                <th>Justification</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>debugger</code></td>
+                <td>Chrome DevTools Protocol (CDP)</td>
+                <td>
+                  Required to attach to the <code>Network</code> domain of the active tab. This is the official Chrome API mechanism allowing the extension to capture accurate request bodies, query parameters, and headers directly from browser interactions. Capture only runs when explicitly activated by clicking "Start capture".
+                </td>
+              </tr>
+              <tr>
+                <td><code>storage</code></td>
+                <td>Local Storage (<code>chrome.storage.local</code>)</td>
+                <td>
+                  Allows the extension to remember your Postman Workspace ID, default collection name, and optional API key on your local device so you do not need to re-enter them between browser restarts.
+                </td>
+              </tr>
+              <tr>
+                <td><code>https://api.postman.com/*</code></td>
+                <td>Host Permission</td>
+                <td>
+                  Required strictly to make authenticated HTTPS requests to Postman's official REST API endpoint (<code>https://api.postman.com/collections</code>) when the user clicks the "Create collection in Postman" button.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Section 4 -->
+      <section class="policy-section" id="data-transfer">
+        <h2><span class="section-num">04.</span> Data Sharing, Transmission & Third Parties</h2>
+        <p>
+          We adhere strictly to the principle of zero data leakage:
+        </p>
+        <ul>
+          <li>
+            <strong>No Developer Server:</strong> The creators of API to Postman do not operate any analytics server, database, or logging endpoints. Your captured data never reaches our servers because we do not have one.
+          </li>
+          <li>
+            <strong>No Third-Party Brokers or Advertisers:</strong> We never sell, rent, license, or exchange user data with data brokers, advertisers, tracking firms, or commercial partners.
+          </li>
+          <li>
+            <strong>Postman API Communication:</strong> If and only if you explicitly choose to export your collection directly to Postman using the "Create collection in Postman" action, the captured requests and your Postman API key are transmitted directly from your browser to Postman's official API servers (<code>api.postman.com</code>) via encrypted HTTPS. This transmission is governed by Postman's own privacy terms.
+          </li>
+        </ul>
+      </section>
+
+      <!-- Section 5 -->
+      <section class="policy-section" id="redaction">
+        <h2><span class="section-num">05.</span> Security & Automatic Redaction</h2>
+        <p>
+          Because browser network traffic can capture authentication tokens, cookies, or secrets, the extension includes automated defense-in-depth masking features:
+        </p>
+        <ul>
+          <li>
+            <strong>Header Redaction:</strong> Headers including <code>Authorization</code>, <code>Proxy-Authorization</code>, <code>Cookie</code>, <code>Set-Cookie</code>, and <code>X-API-Key</code> are replaced with Postman environment variable templates (e.g. <code>{{authorization}}</code>) during export.
+          </li>
+          <li>
+            <strong>Payload Scrubbing:</strong> JSON request bodies and query parameters matching sensitive keys (such as <code>password</code>, <code>access_token</code>, <code>refresh_token</code>, <code>client_secret</code>, <code>otp</code>, <code>secret</code>) are scrubbed and parameterized.
+          </li>
+          <li>
+            <strong>Local Verification:</strong> Users can inspect the exact JSON collection payload or cURL representation directly within the DevTools panel before downloading or synchronizing.
+          </li>
+        </ul>
+        <div class="callout-box warning">
+          <div class="callout-title">User Responsibility Notice</div>
+          <p style="margin: 0; font-size: 0.88rem; color: #fed7aa;">
+            While automated heuristics redact common token signatures, users should always review exported collections before publishing to public workspaces or sharing with third parties.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 6 -->
+      <section class="policy-section" id="storage-retention">
+        <h2><span class="section-num">06.</span> Data Storage, Retention & Deletion</h2>
+        <p>
+          All data retention is entirely under the control of the user:
+        </p>
+        <ul>
+          <li>
+            <strong>In-Memory Lifecycle:</strong> Captured network traffic is kept in volatile browser memory. Closing the DevTools panel, refreshing the tab, or clicking the <strong>"Clear"</strong> button instantly purges the captured request log from memory.
+          </li>
+          <li>
+            <strong>Persistent Local Settings:</strong> If you click "Save settings", your configuration (Workspace ID, collection name, optional API key) is stored in Chrome's unencrypted local storage (<code>chrome.storage.local</code>).
+          </li>
+          <li>
+            <strong>Instant Deletion:</strong> You can purge saved settings at any time by clearing the fields and clicking "Save settings", or by simply uninstalling the extension from <code>chrome://extensions</code>, which prompts Chrome to remove all associated local storage data immediately.
+          </li>
+        </ul>
+      </section>
+
+      <!-- Section 7 -->
+      <section class="policy-section" id="user-rights">
+        <h2><span class="section-num">07.</span> User Rights (GDPR & CCPA Compliance)</h2>
+        <p>
+          Because we do not store, process, or transmit personal data to remote databases or cloud servers, we do not maintain personal profiles, identifiers, or tracking records.
+        </p>
+        <p>
+          To exercise your rights to data erasure or access under regulations such as the General Data Protection Regulation (GDPR) or California Consumer Privacy Act (CCPA):
+        </p>
+        <ul>
+          <li><strong>Right to Access / Portability:</strong> You can download all captured data instantly at any time as standard JSON collections or cURL snippets.</li>
+          <li><strong>Right to Erasure (Right to be Forgotten):</strong> Click "Clear" to wipe memory, or uninstall the extension to delete all stored state from your browser.</li>
+        </ul>
+      </section>
+
+      <!-- Section 8 -->
+      <section class="policy-section" id="updates">
+        <h2><span class="section-num">08.</span> Policy Revisions</h2>
+        <p>
+          We may update this Privacy Policy from time to time to reflect modifications in Chrome Web Store policies or new features in the extension. Any changes will be posted to this page along with an updated "Effective Date". Because the extension has no external communication channel or notification server, users are advised to review this page periodically.
+        </p>
+      </section>
+
+      <!-- Section 9 -->
+      <section class="policy-section" id="contact">
+        <h2><span class="section-num">09.</span> Contact Information & Source Code</h2>
+        <p>
+          <strong>API to Postman</strong> is an open-source project. If you have questions about this Privacy Policy, security suggestions, or need support:
+        </p>
+        <ul>
+          <li>
+            <strong>GitHub Repository & Issues:</strong> <a href="https://github.com/dhirajraut1/api-to-postman" target="_blank" rel="noopener noreferrer" style="color: var(--brand-orange); text-decoration: none;">github.com/dhirajraut1/api-to-postman</a>
+          </li>
+          <li>
+            <strong>Developer Contact:</strong> Via GitHub Issue Tracker or chrome extension developer profile.
+          </li>
+          <li>
+            <strong>Email:</strong> ping.adtech@gmail.com
+          </li>
+        </ul>
+      </section>
+
+    </article>
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-links">
+        <a href="index.html">Overview</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="https://github.com/dhirajraut1/api-to-postman" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer">Chrome Web Store</a>
+      </div>
+      <p>© 2026 API to Postman Extension. Released under the MIT License.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scrolling & active link highlighting for TOC
+    document.addEventListener('DOMContentLoaded', () => {
+      const links = document.querySelectorAll('.toc-link');
+      const sections = document.querySelectorAll('.policy-section');
+
+      window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+          const sectionTop = section.offsetTop - 120;
+          if (window.scrollY >= sectionTop) {
+            current = section.getAttribute('id');
+          }
+        });
+
+        links.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
