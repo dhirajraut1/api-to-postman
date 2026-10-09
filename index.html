@@ -1326,6 +1326,7 @@
           <div class="inspector-nav">
             <div class="inspect-tabs">
               <button class="tab-btn active" data-tab="json" id="tab-btn-json">Postman Collection v2.1</button>
+              <button class="tab-btn" data-tab="env" id="tab-btn-env">Postman Environment</button>
               <button class="tab-btn" data-tab="curl" id="tab-btn-curl">cURL Snippet</button>
               <button class="tab-btn" data-tab="headers" id="tab-btn-headers">Request Details</button>
             </div>
@@ -1342,8 +1343,9 @@
 
           <div class="sim-footer">
             <span style="color: var(--text-muted);">Selected Request: <strong id="sim-selected-name" style="color: #ffffff;">POST /api/v1/auth/login</strong></span>
-            <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-outline btn-sm" id="btn-sim-download">Download JSON</button>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-outline btn-sm" id="btn-sim-download">Download Collection</button>
+              <button class="btn btn-outline btn-sm" id="btn-sim-download-env">Download Environment</button>
               <button class="btn btn-primary btn-sm" id="btn-sim-publish">Publish to Workspace ↗</button>
             </div>
           </div>
@@ -1778,11 +1780,46 @@
         });
       }
 
-      // Format Postman v2.1 Collection JSON
+      // Format Postman Environment JSON (v1.0 schema)
+      function generatePostmanEnv(req, redact) {
+        const envSchema = {
+          id: "3e46c75b-012b-4fa8-8ae1-7f918e0a9f24",
+          name: "Development",
+          values: [
+            {
+              key: "baseUrl",
+              value: "https://api.example.com",
+              type: "default",
+              enabled: true
+            },
+            {
+              key: "authToken",
+              value: redact ? "{{authToken}}" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.t-ID123",
+              type: "secret",
+              enabled: true
+            },
+            {
+              key: "currency",
+              value: "USD",
+              type: "default",
+              enabled: true
+            }
+          ],
+          _postman_variable_scope: "environment",
+          _postman_exported_at: new Date().toISOString(),
+          _postman_exported_using: "API to Postman Chrome DevTools Extension"
+        };
+        return JSON.stringify(envSchema, null, 2);
+      }
+
+      // Format Postman v2.1 Collection JSON with Variables
       function generatePostmanJson(req, redact) {
         const headers = req.headers.map(h => {
           let val = h.value;
-          if (redact && /^(authorization|proxy-authorization|cookie|set-cookie|x-api-key)$/i.test(h.name)) {
+          const lower = h.name.toLowerCase();
+          if (lower === 'authorization') {
+            val = redact ? "Bearer {{authToken}}" : h.value;
+          } else if (redact && /^(proxy-authorization|cookie|set-cookie|x-api-key)$/i.test(h.name)) {
             val = `{{${h.name.toLowerCase().replace(/[^a-z0-9_]/g, '_')}}}`;
           }
           return { key: h.name, value: val, type: 'text' };
@@ -1805,11 +1842,11 @@
           };
         }
 
+        const pathSegments = req.path.split('/').filter(Boolean);
         const urlObj = {
-          raw: req.url,
-          protocol: 'https',
-          host: ['api', 'example', 'com'],
-          path: req.path.split('/').filter(Boolean)
+          raw: `{{baseUrl}}${req.path}`,
+          host: ["{{baseUrl}}"],
+          path: pathSegments
         };
 
         const postmanSchema = {
@@ -1818,6 +1855,20 @@
             name: 'API to Postman Captured Collection',
             schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
           },
+          variable: [
+            {
+              key: "baseUrl",
+              value: "https://api.example.com",
+              type: "string",
+              description: "Base URL for API requests"
+            },
+            {
+              key: "authToken",
+              value: redact ? "{{authToken}}" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.t-ID123",
+              type: "string",
+              description: "Authentication Bearer token"
+            }
+          ],
           item: [
             {
               name: `${req.method} ${req.path}`,
@@ -1826,7 +1877,7 @@
                 header: headers,
                 ...(bodyObj ? { body: bodyObj } : {}),
                 url: urlObj,
-                description: 'Exported via API to Postman Chrome DevTools Extension'
+                description: 'Exported via API to Postman with variable and environment mapping'
               },
               response: []
             }
@@ -1836,12 +1887,15 @@
         return JSON.stringify(postmanSchema, null, 2);
       }
 
-      // Generate cURL command
+      // Generate cURL command with Variables
       function generateCurl(req, redact) {
-        let lines = [`curl -X ${req.method} '${req.url}'`];
+        let lines = [`curl -X ${req.method} '{{baseUrl}}${req.path}'`];
         req.headers.forEach(h => {
           let val = h.value;
-          if (redact && /^(authorization|proxy-authorization|cookie|set-cookie|x-api-key)$/i.test(h.name)) {
+          const lower = h.name.toLowerCase();
+          if (lower === 'authorization') {
+            val = redact ? "Bearer {{authToken}}" : h.value;
+          } else if (redact && /^(proxy-authorization|cookie|set-cookie|x-api-key)$/i.test(h.name)) {
             val = `{{${h.name.toLowerCase().replace(/[^a-z0-9_]/g, '_')}}}`;
           }
           lines.push(`  -H '${h.name}: ${val}'`);
@@ -1864,10 +1918,13 @@
 
       // Generate Request Details
       function generateDetails(req, redact) {
-        let text = `GENERAL\nRequest URL: ${req.url}\nRequest Method: ${req.method}\nStatus Code: ${req.status} ${req.statusText}\n\nREQUEST HEADERS\n`;
+        let text = `GENERAL\nRequest URL: ${req.url}\nParameterized URL: {{baseUrl}}${req.path}\nRequest Method: ${req.method}\nStatus Code: ${req.status} ${req.statusText}\n\nVARIABLES MAPPED\n{{baseUrl}} -> https://api.example.com\n{{authToken}} -> Bearer Token\n\nREQUEST HEADERS\n`;
         req.headers.forEach(h => {
           let val = h.value;
-          if (redact && /^(authorization|proxy-authorization|cookie|set-cookie|x-api-key)$/i.test(h.name)) {
+          const lower = h.name.toLowerCase();
+          if (lower === 'authorization') {
+            val = redact ? "Bearer {{authToken}} (MAPPED)" : val;
+          } else if (redact && /^(proxy-authorization|cookie|set-cookie|x-api-key)$/i.test(h.name)) {
             val = `{{${h.name.toLowerCase().replace(/[^a-z0-9_]/g, '_')}}} (REDACTED)`;
           }
           text += `${h.name}: ${val}\n`;
@@ -1896,6 +1953,8 @@
         let output = '';
         if (activeTab === 'json') {
           output = generatePostmanJson(req, redactEnabled);
+        } else if (activeTab === 'env') {
+          output = generatePostmanEnv(req, redactEnabled);
         } else if (activeTab === 'curl') {
           output = generateCurl(req, redactEnabled);
         } else {
@@ -1951,8 +2010,21 @@
         showToast('Downloading Postman Collection JSON... 🚀');
       });
 
+      document.getElementById('btn-sim-download-env').addEventListener('click', () => {
+        const req = sampleRequests[selectedIndex];
+        const envStr = generatePostmanEnv(req, redactEnabled);
+        const blob = new Blob([envStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `postman-environment-development.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Downloading Postman Environment JSON... 🌍');
+      });
+
       document.getElementById('btn-sim-publish').addEventListener('click', () => {
-        showToast('In the extension, this pushes directly to your Postman Workspace!');
+        showToast('In the extension, this pushes collection & environment directly to Postman!');
       });
 
       // FAQ Accordion

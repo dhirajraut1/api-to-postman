@@ -1,28 +1,156 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>API to Postman</title></head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API to Postman</title>
+</head>
 <body>
   <main id="app">
-    <header><div><h1>API to Postman</h1><p id="status" role="status">Not recording</p></div><span class="privacy">Sensitive values are redacted on export</span></header>
+    <header>
+      <div>
+        <h1>API to Postman</h1>
+        <p id="status" role="status">Not recording</p>
+      </div>
+      <span class="privacy">Sensitive values are redacted on export</span>
+    </header>
+
     <section class="toolbar" aria-label="Capture controls">
-      <button id="start">Start capture</button><button id="stop">Stop capture</button><button id="clear">Clear</button>
+      <button id="start">Start capture</button>
+      <button id="stop">Stop capture</button>
+      <button id="clear">Clear</button>
     </section>
+
     <section class="filters" aria-label="Request filters">
       <input id="search" placeholder="Search URL, method, host…" aria-label="Search requests">
-      <select id="method-filter" aria-label="Filter by method"><option value="">All methods</option><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>OPTIONS</option><option>HEAD</option></select>
-      <select id="status-filter" aria-label="Filter by response status"><option value="">All statuses</option><option value="2">2xx success</option><option value="3">3xx redirect</option><option value="4">4xx client error</option><option value="5">5xx server error</option><option value="none">No response</option></select>
+      <select id="method-filter" aria-label="Filter by method">
+        <option value="">All methods</option>
+        <option>GET</option>
+        <option>POST</option>
+        <option>PUT</option>
+        <option>PATCH</option>
+        <option>DELETE</option>
+        <option>OPTIONS</option>
+        <option>HEAD</option>
+      </select>
+      <select id="status-filter" aria-label="Filter by response status">
+        <option value="">All statuses</option>
+        <option value="2">2xx success</option>
+        <option value="3">3xx redirect</option>
+        <option value="4">4xx client error</option>
+        <option value="5">5xx server error</option>
+        <option value="none">No response</option>
+      </select>
     </section>
-    <section class="selection-toolbar"><label><input id="select-visible" type="checkbox"> Select visible</label><span id="count">0 requests</span><button id="export-all">Export all</button></section>
+
+    <section class="selection-toolbar">
+      <label><input id="select-visible" type="checkbox"> Select visible</label>
+      <span id="count">0 requests</span>
+      <button id="export-all">Export all</button>
+    </section>
+
     <div class="workspace">
-      <section><h2>Captured requests</h2><div id="requests" role="list" aria-label="Captured requests"></div></section>
-      <section class="inspect"><h2>Request inspector</h2><div class="detail-actions"><button id="copy-curl" disabled>Copy cURL</button><button id="copy-json" disabled>Copy details</button></div><pre id="details">Select a request to inspect request and response details.</pre></section>
+      <section>
+        <h2>Captured requests</h2>
+        <div id="requests" role="list" aria-label="Captured requests"></div>
+      </section>
+
+      <section class="inspect">
+        <h2>Request inspector</h2>
+        <div class="detail-actions">
+          <button id="copy-curl" disabled>Copy cURL</button>
+          <button id="copy-json" disabled>Copy details</button>
+        </div>
+        <pre id="details">Select a request to inspect request and response details.</pre>
+      </section>
     </div>
+
+    <!-- Variables & Environment Support Section -->
+    <section class="variables-section" aria-label="Variables and environments">
+      <h2>Variables & Environments</h2>
+      <div class="variables-grid">
+        <div class="variable-box">
+          <div class="field-header">
+            <label for="base-url-value">Base URL</label>
+            <button id="btn-detect-url" type="button" class="btn-micro" title="Auto-detect origin from captured requests">Detect Origin</button>
+          </div>
+          <div class="field-inputs">
+            <input id="base-url-value" placeholder="e.g. https://api.example.com">
+            <div class="var-name-row">
+              <span class="var-prefix">Variable: {{</span>
+              <input id="base-url-var" value="baseUrl" class="input-var-name" placeholder="baseUrl">
+              <span class="var-suffix">}}</span>
+            </div>
+          </div>
+          <label class="toggle-label">
+            <input id="enable-base-url-var" type="checkbox" checked>
+            Map URL paths to variable
+          </label>
+        </div>
+
+        <div class="variable-box">
+          <div class="field-header">
+            <label for="auth-token-value">Auth Token</label>
+            <button id="btn-detect-auth" type="button" class="btn-micro" title="Auto-detect Authorization header from captured requests">Detect Token</button>
+          </div>
+          <div class="field-inputs">
+            <input id="auth-token-value" placeholder="Captured token or secret" type="password" autocomplete="off">
+            <div class="var-name-row">
+              <span class="var-prefix">Variable: {{</span>
+              <input id="auth-token-var" value="authToken" class="input-var-name" placeholder="authToken">
+              <span class="var-suffix">}}</span>
+            </div>
+          </div>
+          <label class="toggle-label">
+            <input id="enable-auth-var" type="checkbox" checked>
+            Map Authorization: Bearer {{token}}
+          </label>
+        </div>
+
+        <div class="variable-box env-manager-box">
+          <div class="field-header">
+            <label for="env-profile-select">Environment Profile</label>
+            <span class="hint-inline">Postman v1.0 schema</span>
+          </div>
+          <div class="field-inputs">
+            <select id="env-profile-select">
+              <option value="dev">Development</option>
+              <option value="staging">Staging</option>
+              <option value="prod">Production</option>
+            </select>
+          </div>
+          <div class="env-btn-toolbar">
+            <button id="download-env" type="button">Download Environment</button>
+            <button id="download-all-envs" type="button">Download All Profiles</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Postman Export & Sync Section -->
     <section class="publish">
       <h2>Export to Postman</h2>
-      <div class="publish-fields"><label>Postman API key<input id="api-key" type="password" autocomplete="off" placeholder="PMAK-…"></label><label>Workspace ID<input id="workspace-id" autocomplete="off" placeholder="Workspace ID"></label><label>Collection name<input id="collection-name" value="Captured API Requests"></label></div>
-      <div class="toolbar"><button id="download">Download selected collection</button><button id="publish">Create collection in Postman</button><button id="save-settings">Save settings</button></div>
-      <p class="hint">The API key is stored in this browser's extension storage only if you choose Save settings. Prefer downloading the collection if you do not want to store a key.</p>
+      <div class="publish-fields">
+        <label>Postman API key
+          <input id="api-key" type="password" autocomplete="off" placeholder="PMAK-…">
+        </label>
+        <label>Workspace ID
+          <input id="workspace-id" autocomplete="off" placeholder="Workspace ID">
+        </label>
+        <label>Collection name
+          <input id="collection-name" value="Captured API Requests">
+        </label>
+      </div>
+      <div class="toolbar">
+        <button id="download">Download collection</button>
+        <button id="download-bundle">Download Collection + Env</button>
+        <button id="publish">Create collection in Postman</button>
+        <button id="publish-env">Publish Env to Postman</button>
+        <button id="save-settings">Save settings</button>
+      </div>
+      <p class="hint">Base URL and auth tokens are mapped to Postman variables. Settings and environment profiles are stored locally in extension storage.</p>
     </section>
   </main>
   <script type="module" src="/src/panel/main.ts"></script>
-</body></html>
+</body>
+</html>

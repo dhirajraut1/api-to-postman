@@ -8,13 +8,15 @@ A vanilla TypeScript / Chrome Manifest V3 DevTools extension scaffold for captur
 - Request list with selection checkboxes, select-visible, and captured/selected counts.
 - Search by method, URL, or response status; filter by HTTP method and response status class.
 - Request inspector showing request headers, query parameters, request body, response headers/body metadata, cache/service-worker indicators, and failures when available.
+- **Base URL & Auth Token Variable Mapping**: Auto-detects target host and maps URLs to `{{baseUrl}}/path` and Authorization headers to `Bearer {{authToken}}`.
+- **Postman Environment Support (v1.0 schema)**: Create, switch, and download Postman Environment files for Development, Staging, and Production profiles.
 - Download a Postman Collection JSON for selected requests or all captured requests.
-- Optional direct collection creation through the Postman API with workspace ID and collection name settings.
-- Copy a cURL command with common credential headers replaced by Postman-style variables.
+- Optional direct collection and environment publishing through the Postman API with workspace ID settings.
+- Copy a cURL command with baseUrl and credential headers replaced by Postman-style variables.
 - Copy request details for debugging.
 - Default redaction on Postman export for common authentication headers and sensitive JSON/query fields.
-- Local extension-storage settings for the Postman API key, workspace ID, and collection name.
-- Unit and integration test starter files for collection generation, redaction, and Postman API client behavior.
+- Local extension-storage settings for the Postman API key, workspace ID, variable configurations, and environment profiles.
+- Unit and integration test starter files for collection generation, environment generation, redaction, and Postman API client behavior.
 
 ## Prerequisites
 
