@@ -42,8 +42,18 @@ export interface PostmanRequest {
   description?: string;
 }
 
+export interface PostmanEvent {
+  listen: "test" | "prerequest";
+  script: {
+    id?: string;
+    type?: string;
+    exec: string[];
+  };
+}
+
 export interface PostmanItem {
   name: string;
+  event?: PostmanEvent[];
   request: PostmanRequest;
 }
 
@@ -55,6 +65,7 @@ export interface PostmanCollection {
     _postman_id?: string;
   };
   item: PostmanItem[];
+  event?: PostmanEvent[];
   variable?: PostmanVariable[];
 }
 

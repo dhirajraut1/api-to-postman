@@ -1,6 +1,8 @@
 import type { CapturedRequest } from "../domain/request";
 import type { PostmanCollection, PostmanItem, PostmanVariable } from "./postman-types";
 import { redactRequest } from "../security/redaction";
+import type { PostmanTestConfig } from "../domain/tests";
+import { buildPostmanTestEvent } from "../domain/tests";
 
 const SCHEMA = "https://schema.getpostman.com/json/collection/v2.1.0/collection.json";
 const OMIT_HEADERS = new Set([
@@ -27,6 +29,7 @@ export interface VariableMappingOptions {
 export interface CollectionBuilderOptions {
   name?: string;
   variableMapping?: VariableMappingOptions;
+  testConfig?: PostmanTestConfig;
 }
 
 /**
@@ -107,7 +110,11 @@ function parameterizeHeaders(
     });
 }
 
-function toPostmanItem(input: CapturedRequest, varOpts?: VariableMappingOptions): PostmanItem {
+function toPostmanItem(
+  input: CapturedRequest,
+  varOpts?: VariableMappingOptions,
+  testConfig?: PostmanTestConfig
+): PostmanItem {
   const headers = parameterizeHeaders(input, varOpts);
   const url = new URL(input.url);
 
@@ -137,6 +144,13 @@ function toPostmanItem(input: CapturedRequest, varOpts?: VariableMappingOptions)
     }
   };
 
+  if (testConfig?.enabled) {
+    const testEvent = buildPostmanTestEvent(input, testConfig);
+    if (testEvent) {
+      item.event = [testEvent];
+    }
+  }
+
   const body = input.requestBody;
   if (
     body?.text !== undefined &&
@@ -160,9 +174,10 @@ export function buildCollection(
 ): PostmanCollection {
   const name = typeof nameOrOptions === "string" ? nameOrOptions : (nameOrOptions.name || "Captured API Requests");
   const varOpts = typeof nameOrOptions === "object" ? nameOrOptions.variableMapping : undefined;
+  const testConfig = typeof nameOrOptions === "object" ? nameOrOptions.testConfig : undefined;
 
   const validRequests = requests.filter(r => !r.excludedFromExport);
-  const items = validRequests.map(r => toPostmanItem(r, varOpts));
+  const items = validRequests.map(r => toPostmanItem(r, varOpts, testConfig));
 
   const collection: PostmanCollection = {
     info: {

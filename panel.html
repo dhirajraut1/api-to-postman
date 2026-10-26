@@ -4,27 +4,53 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>API to Postman</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  <div class="ambient-glows" aria-hidden="true">
+    <div class="glow-orb glow-orange"></div>
+    <div class="glow-orb glow-purple"></div>
+    <div class="glow-orb glow-cyan"></div>
+  </div>
   <main id="app">
-    <header>
-      <div>
-        <h1>API to Postman</h1>
-        <p id="status" role="status">Not recording</p>
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-title-row">
+          <div class="brand-logo-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <h1>API to Postman</h1>
+          <span class="version-tag">v2.1</span>
+        </div>
+        <div class="status-badge">
+          <span id="status-indicator" class="status-dot"></span>
+          <p id="status" role="status">Not recording</p>
+        </div>
       </div>
-      <span class="privacy">Sensitive values are redacted on export</span>
+      <div class="privacy-badge">
+        <span class="privacy-icon">&#128274;</span>
+        <span class="privacy">Sensitive values auto-redacted on export</span>
+      </div>
     </header>
 
+    <!-- Top Action Controls -->
     <section class="toolbar" aria-label="Capture controls">
-      <button id="start">Start capture</button>
-      <button id="stop">Stop capture</button>
-      <button id="clear">Clear</button>
+      <button id="start" class="btn btn-start" type="button"><span class="btn-icon">▶</span> Start capture</button>
+      <button id="stop" class="btn btn-stop" type="button"><span class="btn-icon">⏹</span> Stop capture</button>
+      <button id="clear" class="btn btn-ghost" type="button"><span class="btn-icon">✕</span> Clear</button>
     </section>
 
+    <!-- Filters -->
     <section class="filters" aria-label="Request filters">
-      <input id="search" placeholder="Search URL, method, host…" aria-label="Search requests">
+      <div class="search-wrap">
+        <span class="search-icon" aria-hidden="true">&#128269;</span>
+        <input id="search" placeholder="Search URL, method, host, status…" aria-label="Search requests">
+      </div>
       <select id="method-filter" aria-label="Filter by method">
-        <option value="">All methods</option>
+        <option value="">⚡ All methods</option>
         <option>GET</option>
         <option>POST</option>
         <option>PUT</option>
@@ -34,45 +60,183 @@
         <option>HEAD</option>
       </select>
       <select id="status-filter" aria-label="Filter by response status">
-        <option value="">All statuses</option>
-        <option value="2">2xx success</option>
-        <option value="3">3xx redirect</option>
-        <option value="4">4xx client error</option>
-        <option value="5">5xx server error</option>
-        <option value="none">No response</option>
+        <option value="">📊 All statuses</option>
+        <option value="2">🟢 2xx Success</option>
+        <option value="3">🟡 3xx Redirect</option>
+        <option value="4">🔴 4xx Client error</option>
+        <option value="5">🟣 5xx Server error</option>
+        <option value="none">⚪ No response</option>
       </select>
     </section>
 
+    <!-- Selection toolbar -->
     <section class="selection-toolbar">
-      <label><input id="select-visible" type="checkbox"> Select visible</label>
-      <span id="count">0 requests</span>
-      <button id="export-all">Export all</button>
+      <label class="checkbox-label">
+        <input id="select-visible" type="checkbox">
+        <span>Select visible</span>
+      </label>
+      <span id="count" class="count-badge">0 requests</span>
+      <button id="export-all" class="btn btn-export-all btn-sm" type="button"><span class="btn-icon">⚡</span> Export all</button>
     </section>
 
+    <!-- Workspace: Requests List & Inspector -->
     <div class="workspace">
-      <section>
-        <h2>Captured requests</h2>
+      <section class="requests-card">
+        <div class="card-header">
+          <h2><span class="header-icon">📡</span> Captured requests</h2>
+          <span class="live-pill">LIVE FEED</span>
+        </div>
         <div id="requests" role="list" aria-label="Captured requests"></div>
       </section>
 
       <section class="inspect">
-        <h2>Request inspector</h2>
-        <div class="detail-actions">
-          <button id="copy-curl" disabled>Copy cURL</button>
-          <button id="copy-json" disabled>Copy details</button>
+        <div class="card-header inspect-header">
+          <div class="tabs-nav" role="tablist" aria-label="Inspector tabs">
+            <button id="tab-details" class="tab-btn active" role="tab" aria-selected="true" type="button"><span class="tab-icon">📋</span> Details</button>
+            <button id="tab-curl" class="tab-btn" role="tab" aria-selected="false" type="button"><span class="tab-icon">⚡</span> cURL</button>
+            <button id="tab-tests" class="tab-btn" role="tab" aria-selected="false" type="button"><span class="tab-icon">🧪</span> Test Script</button>
+          </div>
+          <div class="detail-actions">
+            <button id="copy-curl" class="btn btn-sm btn-secondary" disabled type="button">Copy cURL</button>
+            <button id="copy-json" class="btn btn-sm btn-secondary" disabled type="button">Copy details</button>
+            <button id="copy-tests" class="btn btn-sm btn-secondary" disabled type="button">Copy tests</button>
+          </div>
         </div>
-        <pre id="details">Select a request to inspect request and response details.</pre>
+        <pre id="details" tabindex="0">Select a request to inspect request, response details, cURL, or generated tests.</pre>
       </section>
     </div>
 
+    <!-- Sample Tests Configuration Section -->
+    <section class="tests-section" aria-label="Postman tests configuration">
+      <div class="section-title-bar">
+        <div class="title-with-icon">
+          <span class="section-badge-icon badge-icon-tests">🧪</span>
+          <div>
+            <h2>Sample Postman Tests</h2>
+            <p class="section-sub">Automatically attach assertion scripts to exported requests</p>
+          </div>
+        </div>
+        <label class="master-toggle">
+          <input id="enable-tests" type="checkbox" checked>
+          <span class="toggle-text">Add tests to collection</span>
+        </label>
+      </div>
+
+      <div class="tests-grid">
+        <!-- 1. Status Code Check (Emerald Theme) -->
+        <div class="test-card card-theme-emerald">
+          <div class="test-header">
+            <label class="checkbox-label">
+              <input id="test-check-status" type="checkbox" checked>
+              <span class="test-title">Status Code Check</span>
+            </label>
+            <span class="badge-mini">pm.response.status</span>
+          </div>
+          <p class="test-desc">Asserts HTTP response code matches expected status</p>
+          <div class="test-controls">
+            <label for="test-status-mode" class="input-label">Verification mode</label>
+            <select id="test-status-mode">
+              <option value="exact">Exact captured status (e.g. 200, 201)</option>
+              <option value="2xx">Any 2xx success (200, 201, 204)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 2. Response Time Check (Cyan Theme) -->
+        <div class="test-card card-theme-cyan">
+          <div class="test-header">
+            <label class="checkbox-label">
+              <input id="test-check-response-time" type="checkbox" checked>
+              <span class="test-title">Response Time Check</span>
+            </label>
+            <span class="badge-mini">pm.response.responseTime</span>
+          </div>
+          <p class="test-desc">Asserts request completes within maximum latency threshold</p>
+          <div class="test-controls">
+            <label for="test-response-time-limit" class="input-label">Latency threshold</label>
+            <select id="test-response-time-limit">
+              <option value="200">&lt; 200 ms (Fast API)</option>
+              <option value="500" selected>&lt; 500 ms (Standard)</option>
+              <option value="1000">&lt; 1000 ms (Relaxed)</option>
+              <option value="2000">&lt; 2000 ms (High latency)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 3. Content-Type Header Check (Amber Theme) -->
+        <div class="test-card card-theme-amber">
+          <div class="test-header">
+            <label class="checkbox-label">
+              <input id="test-check-content-type" type="checkbox" checked>
+              <span class="test-title">Content-Type Header</span>
+            </label>
+            <span class="badge-mini">pm.response.header</span>
+          </div>
+          <p class="test-desc">Verifies presence of the Content-Type response header</p>
+          <div class="test-snippet-preview">pm.response.to.have.header("Content-Type")</div>
+        </div>
+
+        <!-- 4. Valid JSON Check (Purple Theme) -->
+        <div class="test-card card-theme-purple">
+          <div class="test-header">
+            <label class="checkbox-label">
+              <input id="test-check-json" type="checkbox" checked>
+              <span class="test-title">Valid JSON Check</span>
+            </label>
+            <span class="badge-mini">pm.response.json</span>
+          </div>
+          <p class="test-desc">Validates response payload is well-formed parseable JSON</p>
+          <div class="test-snippet-preview">pm.response.to.be.json</div>
+        </div>
+
+        <!-- 5. Body Not Empty Check (Rose Theme) -->
+        <div class="test-card card-theme-rose">
+          <div class="test-header">
+            <label class="checkbox-label">
+              <input id="test-check-body-not-empty" type="checkbox">
+              <span class="test-title">Body Not Empty</span>
+            </label>
+            <span class="badge-mini">pm.response.withBody</span>
+          </div>
+          <p class="test-desc">Asserts server returned non-empty response body</p>
+          <div class="test-snippet-preview">pm.response.to.be.withBody</div>
+        </div>
+      </div>
+
+      <!-- Test Preview Area -->
+      <div class="test-preview-box">
+        <div class="test-preview-header">
+          <div>
+            <span class="terminal-dots">
+              <span class="terminal-dot dot-red"></span>
+              <span class="terminal-dot dot-yellow"></span>
+              <span class="terminal-dot dot-green"></span>
+            </span>
+            <span>Active Test Script Preview</span>
+          </div>
+          <button id="copy-test-script" class="btn btn-sm btn-secondary" type="button">Copy script</button>
+        </div>
+        <pre id="test-script-preview">// Test script preview will appear here</pre>
+      </div>
+    </section>
+
     <!-- Variables & Environment Support Section -->
     <section class="variables-section" aria-label="Variables and environments">
-      <h2>Variables & Environments</h2>
+      <div class="section-title-bar">
+        <div class="title-with-icon">
+          <span class="section-badge-icon badge-icon-vars">🌐</span>
+          <div>
+            <h2>Variables & Environments</h2>
+            <p class="section-sub">Parameterize origins and tokens with Postman {{variables}}</p>
+          </div>
+        </div>
+      </div>
+
       <div class="variables-grid">
-        <div class="variable-box">
+        <div class="variable-box card-theme-cyan">
           <div class="field-header">
             <label for="base-url-value">Base URL</label>
-            <button id="btn-detect-url" type="button" class="btn-micro" title="Auto-detect origin from captured requests">Detect Origin</button>
+            <button id="btn-detect-url" type="button" class="btn-micro btn-accent-cyan" title="Auto-detect origin from captured requests">Detect Origin</button>
           </div>
           <div class="field-inputs">
             <input id="base-url-value" placeholder="e.g. https://api.example.com">
@@ -82,16 +246,16 @@
               <span class="var-suffix">}}</span>
             </div>
           </div>
-          <label class="toggle-label">
+          <label class="checkbox-label toggle-sub">
             <input id="enable-base-url-var" type="checkbox" checked>
-            Map URL paths to variable
+            <span>Map URL paths to variable</span>
           </label>
         </div>
 
-        <div class="variable-box">
+        <div class="variable-box card-theme-purple">
           <div class="field-header">
             <label for="auth-token-value">Auth Token</label>
-            <button id="btn-detect-auth" type="button" class="btn-micro" title="Auto-detect Authorization header from captured requests">Detect Token</button>
+            <button id="btn-detect-auth" type="button" class="btn-micro btn-accent-purple" title="Auto-detect Authorization header from captured requests">Detect Token</button>
           </div>
           <div class="field-inputs">
             <input id="auth-token-value" placeholder="Captured token or secret" type="password" autocomplete="off">
@@ -101,16 +265,16 @@
               <span class="var-suffix">}}</span>
             </div>
           </div>
-          <label class="toggle-label">
+          <label class="checkbox-label toggle-sub">
             <input id="enable-auth-var" type="checkbox" checked>
-            Map Authorization: Bearer {{token}}
+            <span>Map Authorization: Bearer {{token}}</span>
           </label>
         </div>
 
-        <div class="variable-box env-manager-box">
+        <div class="variable-box card-theme-emerald env-manager-box">
           <div class="field-header">
             <label for="env-profile-select">Environment Profile</label>
-            <span class="hint-inline">Postman v1.0 schema</span>
+            <span class="hint-inline">Postman v1.0</span>
           </div>
           <div class="field-inputs">
             <select id="env-profile-select">
@@ -120,16 +284,25 @@
             </select>
           </div>
           <div class="env-btn-toolbar">
-            <button id="download-env" type="button">Download Environment</button>
-            <button id="download-all-envs" type="button">Download All Profiles</button>
+            <button id="download-env" class="btn btn-env-primary btn-sm" type="button">Download Environment</button>
+            <button id="download-all-envs" class="btn btn-env-secondary btn-sm" type="button">Download All Profiles</button>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Postman Export & Sync Section -->
-    <section class="publish">
-      <h2>Export to Postman</h2>
+    <section class="publish" aria-label="Export to Postman">
+      <div class="section-title-bar">
+        <div class="title-with-icon">
+          <span class="section-badge-icon badge-icon-postman">🚀</span>
+          <div>
+            <h2>Export to Postman</h2>
+            <p class="section-sub">Download Postman Collection v2.1 or sync directly with Postman workspace</p>
+          </div>
+        </div>
+      </div>
+
       <div class="publish-fields">
         <label>Postman API key
           <input id="api-key" type="password" autocomplete="off" placeholder="PMAK-…">
@@ -141,14 +314,14 @@
           <input id="collection-name" value="Captured API Requests">
         </label>
       </div>
-      <div class="toolbar">
-        <button id="download">Download collection</button>
-        <button id="download-bundle">Download Collection + Env</button>
-        <button id="publish">Create collection in Postman</button>
-        <button id="publish-env">Publish Env to Postman</button>
-        <button id="save-settings">Save settings</button>
+      <div class="toolbar export-actions">
+        <button id="download" class="btn btn-primary" type="button"><span class="btn-icon">📦</span> Download collection</button>
+        <button id="download-bundle" class="btn btn-secondary" type="button"><span class="btn-icon">📁</span> Download Collection + Env</button>
+        <button id="publish" class="btn btn-secondary" type="button"><span class="btn-icon">🚀</span> Create collection in Postman</button>
+        <button id="publish-env" class="btn btn-secondary" type="button"><span class="btn-icon">⚡</span> Publish Env to Postman</button>
+        <button id="save-settings" class="btn btn-ghost" type="button"><span class="btn-icon">💾</span> Save settings</button>
       </div>
-      <p class="hint">Base URL and auth tokens are mapped to Postman variables. Settings and environment profiles are stored locally in extension storage.</p>
+      <p class="hint">Includes selected test assertions, parameterized URLs, and redacted secrets. Settings and environment profiles are stored locally in extension storage.</p>
     </section>
   </main>
   <script type="module" src="/src/panel/main.ts"></script>

@@ -78,4 +78,59 @@ describe("buildCollection", () => {
     const authHeader = collection.item[0].request.header.find(h => h.key.toLowerCase() === "authorization");
     expect(authHeader?.value).toBe("Bearer {{jwtSecret}}");
   });
+
+  it("includes test scripts in collection items when testConfig is enabled", () => {
+    const sampleWithResp: CapturedRequest = {
+      ...sample,
+      response: {
+        status: 200,
+        headers: [{ name: "Content-Type", value: "application/json" }],
+        mimeType: "application/json"
+      }
+    };
+
+    const collection = buildCollection([sampleWithResp], {
+      name: "API With Tests",
+      testConfig: {
+        enabled: true,
+        checkStatus: true,
+        statusMode: "exact",
+        checkResponseTime: true,
+        responseTimeMs: 300,
+        checkContentType: true,
+        checkJsonBody: true,
+        checkBodyNotEmpty: true
+      }
+    });
+
+    const item = collection.item[0];
+    expect(item.event).toBeDefined();
+    expect(item.event).toHaveLength(1);
+    expect(item.event![0].listen).toBe("test");
+
+    const execScript = item.event![0].script.exec.join("\n");
+    expect(execScript).toContain('pm.test("Status code is 200"');
+    expect(execScript).toContain('pm.test("Response time is less than 300ms"');
+    expect(execScript).toContain('pm.test("Content-Type header is present"');
+    expect(execScript).toContain('pm.test("Response is valid JSON"');
+    expect(execScript).toContain('pm.test("Response body is not empty"');
+  });
+
+  it("omits test scripts when testConfig is disabled", () => {
+    const collection = buildCollection([sample], {
+      name: "API Without Tests",
+      testConfig: {
+        enabled: false,
+        checkStatus: true,
+        statusMode: "exact",
+        checkResponseTime: true,
+        responseTimeMs: 500,
+        checkContentType: true,
+        checkJsonBody: true,
+        checkBodyNotEmpty: false
+      }
+    });
+
+    expect(collection.item[0].event).toBeUndefined();
+  });
 });
